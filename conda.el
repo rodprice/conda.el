@@ -124,19 +124,23 @@ Set for the lifetime of the process.")
 Cached for the lifetime of the process."
   (if (not (eq conda--executable-path nil))
       conda--executable-path
-    (setq conda--executable-path
-          (cond
-           ((file-executable-p (f-join conda-anaconda-home conda-env-executables-dir "conda"))
-            (f-join conda-anaconda-home conda-env-executables-dir "conda"))
-           ((file-executable-p (f-join conda-anaconda-home conda-env-executables-dir "mamba"))
-            (f-join conda-anaconda-home conda-env-executables-dir "mamba"))
-           ((executable-find "conda"))
-           ((executable-find "mamba"))
-           (t (error
-               "There doesn't appear to be a conda or mamba executable on your exec path.  A common
+    (let* ((conda-name (if (eq window-system 'w32) "conda.exe" "conda"))
+           (mamba-name (if (eq window-system 'w32) "mamba.exe" "mamba"))
+           (conda-exe (f-join conda-anaconda-home conda-env-executables-dir conda-name))
+           (mamba-exe (f-join conda-anaconda-home conda-env-executables-dir mamba-name)))
+      (setq conda--executable-path
+            (cond
+             ((file-executable-p conda-exe) (f-join conda-exe))
+             ((file-executable-p mamba-exe) (f-join mamba-exe))
+             ((executable-find conda-exe))
+             ((executable-find mamba-exe))
+             (t (error
+                 (if (eq window-system 'w32)
+                     "There doesn't appear to be a conda or mamba executable on your exec-path."
+                   "There doesn't appear to be a conda or mamba executable on your exec-path.  A common
  cause of problems like this is GUI Emacs not having environment variables set up like the
  shell.  Check out https://github.com/purcell/exec-path-from-shell for a robust solution to
- this problem"))))))
+ this problem."))))))))
 
 (defvar conda--installed-version nil
   "Cached copy of installed Conda version.
